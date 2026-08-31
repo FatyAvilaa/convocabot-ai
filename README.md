@@ -172,6 +172,6 @@ El sistema reemplazó un proceso manual basado en Google Forms con preguntas abi
 
 ## Autor
 
-Desarrollado por **Fátima Ávila** — Desarrolladora de software con enfoque en soluciones de bajo costo para gobierno y sector público.
+Desarrollado por **Fátima Ávila y Alex Cervantes** — Desarrolladora de software con enfoque en soluciones de bajo costo para gobierno y sector público.
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Fátima%20Ávila-0077B5?style=flat&logo=linkedin)](https://linkedin.com)
