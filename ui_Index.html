@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <base target="_top">
+  <?!= incluir('ui_Styles'); ?>
+</head>
+<body>
+
+  <div class="app-layout">
+    <?!= incluir('comp_Sidebar'); ?>
+
+    <main class="app-content">
+      <?!= incluir('view_Convocatorias'); ?>
+      <?!= incluir('view_Sistema'); ?>
+      <?!= incluir('view_Analitica'); ?>
+    </main>
+  </div>
+
+  <?!= incluir('view_Wizard'); ?>
+
+  <div id="custom-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h3 id="modal-title" style="margin-bottom: 1rem;">Atención</h3>
+      <p id="modal-msg" style="margin-bottom: 1.5rem; color: #475569;"></p>
+      <div id="modal-actions"></div>
+    </div>
+  </div>
+
+  <?!= incluir('ui_Utils'); ?>
+  <?!= incluir('ui_State'); ?>
+  <?!= incluir('ui_API'); ?>
+  <?!= incluir('ui_Router'); ?>
+
+</body>
+</html>

@@ -1,0 +1,612 @@
+<style>
+  .builder-layout { display: flex; gap: 1.5rem; height: 64vh; margin-top: 0.5rem; }
+
+  .tools-panel {
+    width: 250px;
+    flex-shrink: 0;
+    background: var(--crema);
+    border: 1px solid var(--borde-suave);
+    border-radius: var(--radio-lg);
+    padding: 1.1rem;
+    overflow-y: auto;
+  }
+
+  .canvas-panel {
+    flex: 1;
+    background: #FBFDFC;
+    border: 2px dashed var(--borde);
+    border-radius: var(--radio-lg);
+    padding: 1.25rem;
+    overflow-y: auto;
+  }
+
+  .category-title {
+    font-size: 0.7rem;
+    color: var(--piedra-suave);
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 1.4rem 0 0.6rem 0;
+    letter-spacing: 0.07em;
+  }
+  .category-title:first-child { margin-top: 0; }
+
+  .btn-tool {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--borde);
+    padding: 0.6rem 0.7rem;
+    margin-bottom: 0.4rem;
+    border-radius: var(--radio-sm);
+    cursor: pointer;
+    font-size: 0.83rem;
+    font-family: var(--font-stack);
+    font-weight: 600;
+    color: var(--carbon);
+    transition: all 0.15s ease;
+  }
+  .btn-tool:hover {
+    border-color: var(--verde-hoja);
+    color: var(--verde-hoja-oscuro);
+    background: var(--verde-tenue);
+    transform: translateX(2px);
+  }
+  .btn-tool .tool-icon {
+    width: 26px; height: 26px;
+    flex-shrink: 0;
+    border-radius: 7px;
+    background: var(--verde-tenue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem;
+  }
+  .btn-tool.btn-tool-seccion {
+    background: var(--verde-bosque);
+    color: #fff;
+    border: none;
+    margin-top: 0.5rem;
+  }
+  .btn-tool.btn-tool-seccion:hover { background: var(--verde-bosque-2); transform: translateX(2px); }
+  .btn-tool.btn-tool-seccion .tool-icon { background: rgba(255,255,255,0.15); }
+
+  /* Contenedores de Sección con Diseño de Color Completo */
+  .section-container { background: #fff; border-radius: var(--radio-md); padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: var(--sombra-sm); overflow: hidden; }
+  .section-container.active-sec { box-shadow: 0 0 0 3px var(--verde-tenue-2), var(--sombra-md); }
+  .section-container[draggable="true"] { cursor: grab; }
+  .section-container[draggable="true"]:active { cursor: grabbing; }
+
+  .section-header { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 1rem; margin: -1.25rem -1.25rem 1.25rem -1.25rem; }
+  .section-header input { font-weight: 700; border: none; background: none; font-size: 0.92rem; width: 70%; font-family: var(--font-stack); }
+  .section-header input:focus { outline: none; background: rgba(255,255,255,0.6); border-radius: var(--radio-sm); }
+
+  /* Asignación Visual Estricta de Colores */
+  .sec-color-0 { border: 1px solid var(--piedra-suave); border-left: 6px solid var(--piedra-suave); }
+  .sec-color-0 .section-header { background: #F1F5F3; border-bottom: 2px solid var(--piedra-suave); }
+  .sec-color-0 .section-header input { color: var(--piedra); }
+
+  .sec-color-1 { border: 1px solid var(--azul-laguna); border-left: 6px solid var(--azul-laguna); }
+  .sec-color-1 .section-header { background: var(--azul-tenue); border-bottom: 2px solid var(--azul-laguna); }
+  .sec-color-1 .section-header input { color: var(--azul-laguna-oscuro); }
+
+  .sec-color-2 { border: 1px solid var(--verde-hoja); border-left: 6px solid var(--verde-hoja); }
+  .sec-color-2 .section-header { background: var(--verde-tenue); border-bottom: 2px solid var(--verde-hoja); }
+  .sec-color-2 .section-header input { color: var(--verde-hoja-oscuro); }
+
+  .sec-color-3 { border: 1px solid #D97706; border-left: 6px solid #D97706; }
+  .sec-color-3 .section-header { background: #FEF3E2; border-bottom: 2px solid #D97706; }
+  .sec-color-3 .section-header input { color: #92400E; }
+
+  .sec-color-4 { border: 1px solid #7C6FE0; border-left: 6px solid #7C6FE0; }
+  .sec-color-4 .section-header { background: #F1EFFC; border-bottom: 2px solid #7C6FE0; }
+  .sec-color-4 .section-header input { color: #4C3FB0; }
+
+  .sec-color-5 { border: 1px solid #DB5D9E; border-left: 6px solid #DB5D9E; }
+  .sec-color-5 .section-header { background: #FCEEF6; border-bottom: 2px solid #DB5D9E; }
+  .sec-color-5 .section-header input { color: #9D174D; }
+
+  .sec-color-6 { border: 1px solid #0E93A6; border-left: 6px solid #0E93A6; }
+  .sec-color-6 .section-header { background: #E4F5F7; border-bottom: 2px solid #0E93A6; }
+  .sec-color-6 .section-header input { color: #0B7684; }
+
+  /* Tarjetas de Preguntas */
+  .question-card { background: var(--crema); border: 1px solid var(--borde-suave); border-radius: var(--radio-sm); padding: 1rem; margin-bottom: 0.75rem; position: relative; cursor: grab; transition: box-shadow 0.15s ease; }
+  .question-card:hover { box-shadow: var(--sombra-sm); }
+  .question-card:active { cursor: grabbing; }
+  .question-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+
+  .badge-type { font-size: 0.68rem; background: var(--verde-tenue-2); padding: 0.2rem 0.5rem; border-radius: var(--radio-pill); font-weight: 700; color: var(--verde-hoja-oscuro); letter-spacing: 0.02em; }
+  .file-config-box { background: #fff; border: 1px solid var(--borde-suave); border-radius: var(--radio-sm); padding: 0.8rem; margin-top: 0.75rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+  .btn-inciso { background: #fff; border: 1px dashed var(--borde); padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: var(--radio-sm); cursor: pointer; display: inline-block; margin-top: 0.5rem; font-weight: 600; color: var(--piedra); transition: all 0.15s ease; }
+  .btn-inciso:hover { border-color: var(--verde-hoja); color: var(--verde-hoja-oscuro); background: var(--verde-tenue); }
+</style>
+
+<div id="wizard-paso-2" class="wizard-step-pane" style="display: none;">
+  <div class="builder-layout">
+    
+    <div class="tools-panel">
+      <div class="category-title">Bloques Básicos</div>
+      <button type="button" class="btn-tool" onclick="crearPregunta('TEXTO', 'Texto Abierto')"><span class="tool-icon">📝</span><span>Texto Abierto</span></button>
+      <button type="button" class="btn-tool" onclick="crearPregunta('NUMERICO', 'Valor Numérico')"><span class="tool-icon">🔢</span><span>Valor Numérico</span></button>
+      <button type="button" class="btn-tool" onclick="crearPregunta('OPCION_MULTIPLE', 'Selección de Opción')"><span class="tool-icon">🔘</span><span>Opción Múltiple</span></button>
+
+      <div class="category-title">Plantillas Inteligentes SMA</div>
+      <button type="button" class="btn-tool" onclick="crearPregunta('CURP', 'CURP Oficial')"><span class="tool-icon">🪪</span><span>Solicitar CURP</span></button>
+      <button type="button" class="btn-tool" onclick="crearPregunta('EMAIL', 'Correo Electrónico')"><span class="tool-icon">✉️</span><span>Correo Electrónico</span></button>
+      <button type="button" class="btn-tool" onclick="crearPregunta('MUNICIPIO', 'Municipio de Residencia')"><span class="tool-icon">📍</span><span>Selector de Municipios</span></button>
+      <button type="button" class="btn-tool" onclick="crearPregunta('ARCHIVO', 'Adjunte Documento')"><span class="tool-icon">📁</span><span>Carga de Archivos</span></button>
+
+      <div class="category-title">Estructura y Flujo</div>
+      <button type="button" class="btn-tool" onclick="crearPregunta('RAMIFICACION', 'Modalidad a aplicar')"><span class="tool-icon">🌿</span><span>Opción con Ramificación</span></button>
+      <button type="button" class="btn-tool btn-tool-seccion" onclick="crearNuevaSeccion()"><span class="tool-icon">➕</span><span>Nueva Sección (Opcional)</span></button>
+    </div>
+
+    <div class="canvas-panel" id="builder-canvas">
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let seccionActivaId = 'sec_principal';
+  const COLORES_DISPONIBLES = ['sec-color-0', 'sec-color-1', 'sec-color-2', 'sec-color-3', 'sec-color-4', 'sec-color-5', 'sec-color-6'];
+
+  function inicializarPaso2() {
+    // 1. Forzar que el esquema sea un objeto válido (desempaquetar el JSON de Sheets)
+    let esquema = State.nuevoDraft.esquemaFormulario;
+    
+    if (typeof esquema === 'string') {
+      try { 
+        esquema = JSON.parse(esquema); 
+      } catch (e) { 
+        esquema = { secciones: [] }; 
+      }
+    }
+    
+    // Por si ocurrió un doble "stringify" al guardar en la base de datos
+    if (typeof esquema === 'string') {
+      try { esquema = JSON.parse(esquema); } catch (e) { }
+    }
+
+    if (!esquema || typeof esquema !== 'object' || !esquema.secciones) {
+      esquema = { secciones: [] };
+    }
+
+    // 2. Si está vacío (nueva convocatoria), inicializamos la sección base
+    if (esquema.secciones.length === 0) {
+      esquema.secciones.push({
+        id: 'sec_principal',
+        titulo: 'Cuestionario Base (Principal)',
+        colorClass: 'sec-color-0',
+        preguntas: []
+      });
+    }
+
+    // 3. Actualizamos el estado de memoria con el objeto limpio 
+    State.nuevoDraft.esquemaFormulario = esquema;
+    
+    // 4. Aseguramos que haya una sección activa seleccionada para que no falle al agregar nuevas preguntas
+    if (!seccionActivaId || !esquema.secciones.find(s => s.id === seccionActivaId)) {
+      seccionActivaId = esquema.secciones[0].id;
+    }
+
+    // 5. ¡Dibujar en pantalla todo lo que recuperamos!
+    renderizarConstructor();
+  }
+
+  function crearNuevaSeccion() {
+    const secciones = State.nuevoDraft.esquemaFormulario.secciones;
+    const nuevoIdx = secciones.length;
+    const nuevoId = 'sec_' + new Date().getTime();
+    
+    secciones.push({
+      id: nuevoId,
+      titulo: `Sección ${nuevoIdx + 1}: Flujo Opcional`,
+      colorClass: COLORES_DISPONIBLES[nuevoIdx % COLORES_DISPONIBLES.length],
+      preguntas: []
+    });
+    
+    seccionActivaId = nuevoId;
+    renderizarConstructor();
+
+    // Auto-deslizar la pantalla hacia abajo para ver la nueva sección
+    setTimeout(() => {
+      const canvas = document.getElementById('builder-canvas');
+      if (canvas) {
+        canvas.scrollTo({
+          top: canvas.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }, 50);
+  }
+
+  function crearPregunta(tipo, nombreBase) {
+    const secciones = State.nuevoDraft.esquemaFormulario.secciones;
+    let seccion = secciones.find(s => s.id === seccionActivaId);
+    if (!seccion) {
+      seccion = secciones[0];
+      seccionActivaId = seccion.id;
+    }
+
+    const nuevaQ = {
+      id: 'q_' + new Date().getTime(),
+      tipo: tipo,
+      etiqueta: `¿Cuál es tu ${nombreBase.toLowerCase()}?`,
+      requerido: true
+    };
+
+    if (tipo === 'RAMIFICACION') {
+      nuevaQ.opciones = [
+        { texto: 'Modalidad A', saltoSeccion: 'siguiente' },
+        { texto: 'Modalidad B', saltoSeccion: 'siguiente' }
+      ];
+    } else if (tipo === 'OPCION_MULTIPLE') {
+      nuevaQ.incisos = ['Opción A', 'Opción B'];
+    } else if (tipo === 'MUNICIPIO') {
+      nuevaQ.tipo = 'OPCIONES_FIJAS';
+      nuevaQ.origen = 'TLAXCALA_60';
+    } else if (tipo === 'ARCHIVO') {
+      nuevaQ.configArchivo = { permitirPdf: true, permitirImagenes: true, maxArchivos: 1, pesoMaxMb: 2 };
+    } else if (tipo === 'NUMERICO') {
+      nuevaQ.configNumerico = { permitirDecimal: false };
+    }
+
+    seccion.preguntas.push(nuevaQ);
+    renderizarConstructor();
+
+    // NUEVO: Auto-deslizar para ver la pregunta recién agregada en la sección activa
+    setTimeout(() => {
+      const activa = document.querySelector('.active-sec');
+      if (activa) {
+        activa.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 50);
+  }
+
+  function eliminarPregunta(secId, qId) {
+    const seccion = State.nuevoDraft.esquemaFormulario.secciones.find(s => s.id === secId);
+    if (seccion) {
+      seccion.preguntas = seccion.preguntas.filter(q => q.id !== qId);
+      renderizarConstructor();
+    }
+  }
+
+  function eliminarSeccion(secId) {
+    if (secId === 'sec_principal') {
+      showModal("Acción Denegada", "No puedes eliminar la sección base del cuestionario.");
+      return;
+    }
+    State.nuevoDraft.esquemaFormulario.secciones = State.nuevoDraft.esquemaFormulario.secciones.filter(s => s.id !== secId);
+    seccionActivaId = 'sec_principal';
+    renderizarConstructor();
+  }
+
+  function eliminarInciso(secId, qId, index) {
+    const seccion = State.nuevoDraft.esquemaFormulario.secciones.find(s => s.id === secId);
+    const q = seccion.preguntas.find(pre => pre.id === qId);
+    if (q && q.incisos && q.incisos.length > 1) {
+      q.incisos.splice(index, 1);
+      renderizarConstructor();
+    }
+  }
+
+  function anadirInciso(secId, qId) {
+    const seccion = State.nuevoDraft.esquemaFormulario.secciones.find(s => s.id === secId);
+    const q = seccion.preguntas.find(pre => pre.id === qId);
+    if (q && q.incisos) {
+      q.incisos.push(`Nueva Opción ${q.incisos.length + 1}`);
+      renderizarConstructor();
+    }
+  }
+  
+  function anadirOpcionRamificacion(secId, qId) {
+    const seccion = State.nuevoDraft.esquemaFormulario.secciones.find(s => s.id === secId);
+    const q = seccion.preguntas.find(pre => pre.id === qId);
+    if (q && q.opciones) {
+      q.opciones.push({ texto: `Nueva Opción ${q.opciones.length + 1}`, saltoSeccion: 'siguiente' });
+      renderizarConstructor();
+    }
+  }
+
+  function eliminarOpcionRamificacion(secId, qId, index) {
+    const seccion = State.nuevoDraft.esquemaFormulario.secciones.find(s => s.id === secId);
+    const q = seccion.preguntas.find(pre => pre.id === qId);
+    if (q && q.opciones && q.opciones.length > 1) {
+      q.opciones.splice(index, 1);
+      renderizarConstructor();
+    }
+  }
+
+  function modificarPropiedad(secId, qId, campo, valor) {
+    const seccion = State.nuevoDraft.esquemaFormulario.secciones.find(s => s.id === secId);
+    if (!seccion) return;
+    const q = seccion.preguntas.find(pre => pre.id === qId);
+    if (q) q[campo] = valor;
+  }
+
+  function modificarConfigArchivo(secId, qId, campo, valor) {
+    const seccion = State.nuevoDraft.esquemaFormulario.secciones.find(s => s.id === secId);
+    const q = seccion.preguntas.find(pre => pre.id === qId);
+    if (q && q.configArchivo) q.configArchivo[campo] = valor;
+  }
+
+  function modificarConfigNumerico(secId, qId, campo, valor) {
+    const seccion = State.nuevoDraft.esquemaFormulario.secciones.find(s => s.id === secId);
+    const q = seccion.preguntas.find(pre => pre.id === qId);
+    if (q && q.configNumerico) q.configNumerico[campo] = valor;
+  }
+
+  function modificarSaltoRamificacion(secId, qId, optIndex, salto) {
+    const seccion = State.nuevoDraft.esquemaFormulario.secciones.find(s => s.id === secId);
+    const q = seccion.preguntas.find(pre => pre.id === qId);
+    if (q && q.opciones && q.opciones[optIndex]) {
+      q.opciones[optIndex].saltoSeccion = salto;
+    }
+  }
+
+  /* LOGICA DE REORDENAMIENTO NATIVO (DRAG & DROP) */
+  function reordenarSecciones(sourceId, targetId) {
+    if (sourceId === targetId || targetId === 'sec_principal' || sourceId === 'sec_principal') return;
+    
+    const secciones = State.nuevoDraft.esquemaFormulario.secciones;
+    const sourceIdx = secciones.findIndex(s => s.id === sourceId);
+    const targetIdx = secciones.findIndex(s => s.id === targetId);
+    
+    if (sourceIdx > -1 && targetIdx > -1) {
+      const [movedSec] = secciones.splice(sourceIdx, 1);
+      const nuevoTargetIdx = secciones.findIndex(s => s.id === targetId);
+      
+      if (sourceIdx < targetIdx) {
+        secciones.splice(nuevoTargetIdx + 1, 0, movedSec);
+      } else {
+        secciones.splice(nuevoTargetIdx, 0, movedSec);
+      }
+      renderizarConstructor();
+    }
+  }
+
+  function reordenarPreguntas(sourceSecId, sourceQId, targetSecId, targetQId) {
+    // Escape rápido: evita bugs si se suelta exactamente en la misma posición
+    if (sourceQId === targetQId) return;
+
+    const secciones = State.nuevoDraft.esquemaFormulario.secciones;
+    const sourceSec = secciones.find(s => s.id === sourceSecId);
+    const targetSec = secciones.find(s => s.id === targetSecId);
+    if (!sourceSec || !targetSec) return;
+
+    const sourceIdx = sourceSec.preguntas.findIndex(q => q.id === sourceQId);
+    const targetIdx = targetSec.preguntas.findIndex(q => q.id === targetQId);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+
+    // 1. Extraemos la pregunta origen
+    const [movedQ] = sourceSec.preguntas.splice(sourceIdx, 1);
+    
+    // 2. Buscamos el nuevo índice destino (crucial porque el arreglo ya cambió)
+    const nuevoTargetIdx = targetSec.preguntas.findIndex(q => q.id === targetQId);
+    
+    // 3. Insertamos evaluando dirección
+    if (sourceSecId === targetSecId && sourceIdx < targetIdx) {
+      targetSec.preguntas.splice(nuevoTargetIdx + 1, 0, movedQ);
+    } else {
+      targetSec.preguntas.splice(nuevoTargetIdx, 0, movedQ);
+    }
+
+    renderizarConstructor();
+  }
+
+  function moverPreguntaASeccionVacia(sourceSecId, sourceQId, targetSecId) {
+    if (sourceSecId === targetSecId) return;
+    const secciones = State.nuevoDraft.esquemaFormulario.secciones;
+    const sourceSec = secciones.find(s => s.id === sourceSecId);
+    const targetSec = secciones.find(s => s.id === targetSecId);
+    if (!sourceSec || !targetSec) return;
+
+    const sourceQIdx = sourceSec.preguntas.findIndex(q => q.id === sourceQId);
+    if (sourceQIdx === -1) return;
+
+    const [movedQ] = sourceSec.preguntas.splice(sourceQIdx, 1);
+    targetSec.preguntas.push(movedQ);
+    renderizarConstructor();
+  }
+
+  function renderizarConstructor() {
+    const canvas = document.getElementById('builder-canvas');
+    const secciones = State.nuevoDraft.esquemaFormulario.secciones;
+
+    canvas.innerHTML = '';
+
+    secciones.forEach((sec, sIdx) => {
+      const isBase = sec.id === 'sec_principal';
+      const colorCls = sec.colorClass || 'sec-color-0';
+      const activeCls = sec.id === seccionActivaId ? 'active-sec' : '';
+
+      const secDiv = document.createElement('div');
+      secDiv.className = `section-container ${colorCls} ${activeCls}`;
+      
+      if (!isBase) {
+        secDiv.draggable = true;
+        secDiv.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', 'section:' + sec.id);
+        });
+      }
+      
+      secDiv.addEventListener('dragover', (e) => { e.preventDefault(); });
+      
+      secDiv.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const data = e.dataTransfer.getData('text/plain');
+        if (data.startsWith('section:')) {
+          const sourceId = data.split(':')[1];
+          reordenarSecciones(sourceId, sec.id);
+        } else if (data.startsWith('question:')) {
+          const parts = data.split(':');
+          moverPreguntaASeccionVacia(parts[2], parts[1], sec.id);
+        }
+      });
+
+      secDiv.onclick = (e) => {
+        e.stopPropagation();
+        seccionActivaId = sec.id;
+        document.querySelectorAll('.section-container').forEach(el => el.classList.remove('active-sec'));
+        secDiv.classList.add('active-sec');
+      };
+
+      let btnEliminarSec = isBase ? '' : `<button onclick="event.stopPropagation(); eliminarSeccion('${sec.id}')" style="background:none; border:none; color:#C0392B; font-weight:bold; cursor:pointer;">Eliminar Sección ×</button>`;
+      
+      secDiv.innerHTML = `
+        <div class="section-header">
+          <input type="text" value="${sec.titulo}" onchange="State.nuevoDraft.esquemaFormulario.secciones[${sIdx}].titulo = this.value">
+          ${btnEliminarSec}
+        </div>
+      `;
+
+      if (sec.preguntas.length === 0) {
+        const vacio = document.createElement('div');
+        vacio.style.cssText = 'text-align:center; padding:1.5rem; color:#94a3b8; font-size:0.85rem;';
+        vacio.innerText = 'Sección vacía. Suelta una pregunta aquí o selecciónala para añadir bloques.';
+        secDiv.appendChild(vacio);
+      } else {
+        sec.preguntas.forEach((q, qIdx) => {
+          const qCard = document.createElement('div');
+          qCard.className = 'question-card';
+          
+          qCard.draggable = true;
+          qCard.addEventListener('dragstart', (e) => {
+            e.stopPropagation();
+            e.dataTransfer.setData('text/plain', `question:${q.id}:${sec.id}`);
+          });
+          
+          qCard.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          });
+          
+          qCard.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const data = e.dataTransfer.getData('text/plain');
+            if (data.startsWith('question:')) {
+              const parts = data.split(':');
+              reordenarPreguntas(parts[2], parts[1], sec.id, q.id);
+            }
+          });
+          
+          let controlesEspeciales = '';
+
+          if (q.tipo === 'ARCHIVO') {
+            const config = q.configArchivo;
+            controlesEspeciales = `
+              <div class="file-config-box" draggable="false">
+                <div>
+                  <label style="font-size:0.75rem; font-weight:bold; display:block; margin-bottom:0.25rem;">Formatos:</label>
+                  <label style="font-size:0.8rem; display:block;"><input type="checkbox" ${config.permitirPdf ? 'checked' : ''} onchange="modificarConfigArchivo('${sec.id}','${q.id}','permitirPdf', this.checked)"> PDFs</label>
+                  <label style="font-size:0.8rem; display:block;"><input type="checkbox" ${config.permitirImagenes ? 'checked' : ''} onchange="modificarConfigArchivo('${sec.id}','${q.id}','permitirImagenes', this.checked)"> Imágenes</label>
+                </div>
+                <div>
+                  <label style="font-size:0.75rem; font-weight:bold; display:block; margin-bottom:0.25rem;">Cant. de archivos:</label>
+                  <input type="number" min="1" max="10" class="form-control" style="padding:0.2rem; font-size:0.8rem; margin-bottom:0.25rem; width: 60px;" 
+                         value="${config.maxArchivos || 1}" 
+                         onchange="modificarConfigArchivo('${sec.id}','${q.id}','maxArchivos', parseInt(this.value, 10))">
+                  
+                  <label style="font-size:0.75rem; font-weight:bold; display:block; margin-bottom:0.25rem; margin-top:0.25rem;">Peso máx (MB):</label>
+                  <select class="form-control" style="padding:0.2rem; font-size:0.8rem;" onchange="modificarConfigArchivo('${sec.id}','${q.id}','pesoMaxMb', parseInt(this.value,10))">
+                    <option value="2" ${config.pesoMaxMb===2?'selected':''}>2 MB</option>
+                    <option value="5" ${config.pesoMaxMb===5?'selected':''}>5 MB</option>
+                    <option value="10" ${config.pesoMaxMb===10?'selected':''}>10 MB</option>
+                  </select>
+                </div>
+              </div>
+            `;
+          }
+          else if (q.tipo === 'NUMERICO') {
+            if (!q.configNumerico) q.configNumerico = { permitirDecimal: false };
+            const config = q.configNumerico;
+            controlesEspeciales = `
+              <div style="margin-top: 0.75rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.75rem;" draggable="false">
+                <label style="font-size:0.75rem; font-weight:bold; display:block; margin-bottom:0.25rem;">Tipo de Número Admitido:</label>
+                <select class="form-control" style="padding:0.2rem; font-size:0.8rem;" onchange="modificarConfigNumerico('${sec.id}','${q.id}','permitirDecimal', this.value === 'true')">
+                  <option value="false" ${!config.permitirDecimal ? 'selected' : ''}>🔢 Número Entero</option>
+                  <option value="true" ${config.permitirDecimal ? 'selected' : ''}>📈 Número Decimal</option>
+                </select>
+              </div>
+            `;
+          }
+          else if (q.tipo === 'OPCION_MULTIPLE') {
+            let incisosHtml = '';
+            q.incisos.forEach((inciso, iIdx) => {
+              incisosHtml += `
+                <div style="display:flex; gap:0.5rem; align-items:center; margin-top:0.25rem;" draggable="false">
+                  <span style="font-size:0.8rem; color:#64748b; font-weight:bold;">•</span>
+                  <input type="text" class="form-control" style="padding:0.25rem; font-size:0.8rem; flex:1;" value="${inciso}" onchange="State.nuevoDraft.esquemaFormulario.secciones.find(s=>s.id==='${sec.id}').preguntas.find(pre=>pre.id==='${q.id}').incisos[${iIdx}]=this.value;">
+                  <button onclick="event.stopPropagation(); eliminarInciso('${sec.id}','${q.id}', ${iIdx})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold;">&times;</button>
+                </div>
+              `;
+            });
+            controlesEspeciales = `
+              <div style="margin-top:0.75rem;" draggable="false">
+                <label style="font-size:0.75rem; font-weight:bold;">Incisos de la pregunta:</label>
+                ${incisosHtml}
+                <button class="btn-inciso" onclick="event.stopPropagation(); anadirInciso('${sec.id}','${q.id}')">+ Añadir Inciso</button>
+              </div>
+            `;
+          }
+          else if (q.tipo === 'RAMIFICACION') {
+            let opcionesHtml = '';
+            q.opciones.forEach((opt, oIdx) => {
+              let selectSecciones = `<select style="padding:0.2rem; font-size:0.8rem; border:1px solid #cbd5e1; border-radius:4px; width: 220px; flex-shrink: 0;" onchange="modificarSaltoRamificacion('${sec.id}','${q.id}', ${oIdx}, this.value)">`;
+              selectSecciones += `<option value="siguiente" ${opt.saltoSeccion==='siguiente'?'selected':''}>➡️ Siguiente Pregunta</option>`;
+              secciones.forEach(s => {
+                selectSecciones += `<option value="${s.id}" ${opt.saltoSeccion===s.id?'selected':''}>Jump to: ${s.titulo}</option>`;
+              });
+              selectSecciones += `</select>`;
+
+              opcionesHtml += `
+                <div style="display:flex; gap:0.5rem; align-items:center; margin-top:0.25rem; width: 100%;" draggable="false">
+                  <span style="font-size:0.8rem; color:#64748b; font-weight:bold;">•</span>
+                  <input type="text" class="form-control" style="padding:0.25rem; font-size:0.8rem; flex:1; min-width: 0;" value="${opt.texto}" onchange="State.nuevoDraft.esquemaFormulario.secciones.find(s=>s.id==='${sec.id}').preguntas.find(pre=>pre.id==='${q.id}').opciones[${oIdx}].texto=this.value;">
+                  ${secciones.length > 1 ? selectSecciones : ''}
+                  <button onclick="event.stopPropagation(); eliminarOpcionRamificacion('${sec.id}','${q.id}', ${oIdx})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; padding:0 0.25rem;">&times;</button>
+                </div>
+              `;
+            });
+            controlesEspeciales = `
+              <div style="margin-top:0.75rem;" draggable="false">
+                <label style="font-size:0.75rem; font-weight:bold;">Opciones del Bot e Hilos Lógicos:</label>
+                ${opcionesHtml}
+                <button class="btn-inciso" onclick="event.stopPropagation(); anadirOpcionRamificacion('${sec.id}','${q.id}')">+ Añadir Opción</button>
+              </div>
+            `;
+          } 
+          else if (q.tipo === 'OPCIONES_FIJAS') {
+            controlesEspeciales = `<p style="font-size:0.75rem; color:#14884A; font-weight:bold; margin-top:0.5rem;" draggable="false">✓ Catálogo automatizado: Esta opción desplegará el listado oficial de los 60 municipios del estado.</p>`;
+          }
+
+          qCard.innerHTML = `
+            <div class="question-card-header" draggable="false">
+              <div>
+                <span style="font-weight:bold; color:#475569; font-size:0.85rem; margin-right:0.5rem;">P${qIdx + 1}</span>
+                <span class="badge-type">${q.tipo.replace('_',' ')}</span>
+              </div>
+              <button onclick="event.stopPropagation(); eliminarPregunta('${sec.id}','${q.id}')" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:1.1rem;">&times;</button>
+            </div>
+            <div draggable="false">
+              <input type="text" class="form-control" style="padding:0.5rem; font-size:0.85rem;" value="${q.etiqueta}" onchange="modificarPropiedad('${sec.id}','${q.id}','etiqueta', this.value)">
+            </div>
+            ${controlesEspeciales}
+            <div style="margin-top:0.5rem; display:flex; align-items:center; gap:0.25rem;" draggable="false">
+              <input type="checkbox" id="req_${q.id}" ${q.requerido ? 'checked' : ''} onchange="modificarPropiedad('${sec.id}','${q.id}','requerido', this.checked)">
+              <label for="req_${q.id}" style="font-size:0.75rem; color:#475569;">Obligatorio en el flujo</label>
+            </div>
+          `;
+          
+          secDiv.appendChild(qCard);
+        });
+      }
+
+      canvas.appendChild(secDiv);
+    });
+  }
+</script>

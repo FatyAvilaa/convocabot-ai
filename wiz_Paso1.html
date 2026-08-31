@@ -1,0 +1,127 @@
+<div id="wizard-paso-1" class="wizard-step-pane">
+  <h3 style="font-family: var(--font-display); font-weight: 600; font-size: 1.3rem; margin-bottom: 1.75rem; color: var(--verde-bosque);">
+    Paso 1 · Información general de la convocatoria
+  </h3>
+  
+  <div class="form-grupo">
+    <label for="w1-nombre">Nombre del Programa / Convocatoria *</label>
+    <input type="text" id="w1-nombre" class="form-control" placeholder="Ej. Programa de Apoyo Tecnológico 2026">
+  </div>
+
+  <div class="form-grupo">
+    <label for="w1-descripcion">Descripción General</label>
+    <textarea id="w1-descripcion" class="form-control" rows="3" placeholder="Describe brevemente el objetivo del programa..."></textarea>
+  </div>
+
+  <div class="form-grupo">
+    <label for="w1-prefijo">Prefijo del Folio (Ej. CAM, HUE):</label>
+    <input type="text" id="w1-prefijo" class="form-control" maxlength="5" placeholder="SMA">
+  </div>
+
+  <div style="display: flex; gap: 1rem;">
+    <div class="form-grupo" style="flex: 1;">
+      <label for="w1-inicio">Fecha de Inicio *</label>
+      <input type="date" id="w1-inicio" class="form-control">
+    </div>
+    <div class="form-grupo" style="flex: 1;">
+      <label for="w1-fin">Fecha de Cierre *</label>
+      <input type="date" id="w1-fin" class="form-control">
+    </div>
+    <div class="form-grupo" style="flex: 1;">
+      <label for="w1-limite">Límite Máximo de Registros *</label>
+      <input type="number" id="w1-limite" class="form-control" value="500">
+    </div>
+  </div>
+
+  <div class="form-grupo">
+    <label for="w1-msg-bienvenida">Mensaje de Bienvenida del Bot (WhatsApp/Messenger) *</label>
+    <textarea id="w1-msg-bienvenida" class="form-control" rows="2" placeholder="Ej. Hola! Bienvenido al sistema de registro de la SMA. Por favor responde las siguientes preguntas:"></textarea>
+  </div>
+
+  <div class="form-grupo">
+    <label for="w1-msg-exito">Mensaje de Confirmación de Registro Exitoso *</label>
+    <textarea id="w1-msg-exito" class="form-control" rows="2" placeholder="Ej. Muchas gracias, tu información ha sido guardada. Tu folio de atención es:"></textarea>
+  </div>
+</div>
+
+<script>
+  function inicializarPaso1() {
+    if (State && State.nuevoDraft) {
+      const draft = State.nuevoDraft;
+
+      const inputNombre = document.getElementById('w1-nombre');
+      if (inputNombre) inputNombre.value = draft.nombre || '';
+
+      const inputDesc = document.getElementById('w1-descripcion');
+      if (inputDesc) inputDesc.value = draft.descripcion || '';
+
+      const inputPrefijo = document.getElementById('w1-prefijo');
+      if (inputPrefijo) inputPrefijo.value = draft.prefijoFolio || 'SMA';
+
+      const inputLimite = document.getElementById('w1-limite');
+      if (inputLimite) inputLimite.value = draft.limiteRegistros || '';
+
+      const inputInicio = document.getElementById('w1-inicio');
+      if (inputInicio && draft.fechaInicio) {
+        inputInicio.value = String(draft.fechaInicio).split('T')[0];
+      }
+
+      const inputFin = document.getElementById('w1-fin');
+      if (inputFin && draft.fechaFin) {
+        inputFin.value = String(draft.fechaFin).split('T')[0];
+      }
+
+      if (draft.mensajes) {
+        const inputBienvenida = document.getElementById('w1-msg-bienvenida');
+        if (inputBienvenida) inputBienvenida.value = draft.mensajes.bienvenida || '';
+
+        const inputExito = document.getElementById('w1-msg-exito');
+        if (inputExito) inputExito.value = draft.mensajes.exito || '';
+      }
+    }
+  }
+
+  function validarYGuardarPaso1() {
+    const nombre = document.getElementById('w1-nombre').value.trim();
+    
+    const inputPrefijo = document.getElementById('w1-prefijo');
+    const prefijo = inputPrefijo ? inputPrefijo.value.trim().toUpperCase() : 'SMA';
+    
+    const descripcion = document.getElementById('w1-descripcion').value.trim();
+    const inicioStr = document.getElementById('w1-inicio').value;
+    const finStr = document.getElementById('w1-fin').value;
+    const limiteStr = document.getElementById('w1-limite').value;
+    const bienvenida = document.getElementById('w1-msg-bienvenida').value.trim();
+    const exito = document.getElementById('w1-msg-exito').value.trim();
+
+    if (!nombre || !inicioStr || !finStr || !limiteStr || !bienvenida || !exito) {
+      showModal("Campos Incompletos", "Por favor, completa todos los campos obligatorios marcados con (*).");
+      return false;
+    }
+
+    const fechaInicio = new Date(inicioStr);
+    const fechaFin = new Date(finStr);
+
+    if (fechaInicio > fechaFin) {
+      showModal("Error en Fechas", "La fecha de cierre no puede ser anterior a la fecha de inicio.");
+      return false;
+    }
+
+    const limite = parseInt(limiteStr, 10);
+    if (isNaN(limite) || limite <= 0) {
+      showModal("Error en Límite", "El límite de registros debe ser un número entero mayor a 0.");
+      return false;
+    }
+
+    State.nuevoDraft.nombre = nombre;
+    State.nuevoDraft.prefijoFolio = prefijo || 'SMA';
+    State.nuevoDraft.descripcion = descripcion;
+    State.nuevoDraft.fechaInicio = inicioStr;
+    State.nuevoDraft.fechaFin = finStr;
+    State.nuevoDraft.limiteRegistros = limite;
+    State.nuevoDraft.mensajes.bienvenida = bienvenida;
+    State.nuevoDraft.mensajes.exito = exito;
+
+    return true;
+  }
+</script>

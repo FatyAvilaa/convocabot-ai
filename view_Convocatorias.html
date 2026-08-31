@@ -1,0 +1,396 @@
+<style>
+  .vista-encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.75rem;
+  }
+
+  .vista-encabezado h1 { margin-bottom: 0.2rem; }
+
+  .vista-encabezado .subtitulo {
+    color: var(--piedra);
+    font-size: 0.9rem;
+  }
+
+  .btn-nueva-convocatoria {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, var(--verde-hoja), var(--verde-hoja-oscuro));
+    color: #fff;
+    padding: 0.75rem 1.4rem;
+    border: none;
+    border-radius: var(--radio-md);
+    font-family: var(--font-stack);
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    box-shadow: var(--sombra-md);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-nueva-convocatoria:hover { transform: translateY(-1px); box-shadow: var(--sombra-lg); }
+  .btn-nueva-convocatoria svg { width: 16px; height: 16px; }
+
+  .estado-carga-caja {
+    padding: 2.5rem;
+    text-align: center;
+    color: var(--piedra);
+    background: #fff;
+    border: 1.5px dashed var(--borde);
+    border-radius: var(--radio-lg);
+    font-size: 0.9rem;
+  }
+
+  .estado-vacio {
+    padding: 3.5rem 2rem;
+    text-align: center;
+    background: #fff;
+    border: 1.5px dashed var(--borde);
+    border-radius: var(--radio-lg);
+  }
+  .estado-vacio .icono-vacio {
+    width: 56px; height: 56px;
+    margin: 0 auto 1.1rem;
+    border-radius: var(--radio-md);
+    background: var(--verde-tenue);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--verde-hoja-oscuro);
+  }
+  .estado-vacio .icono-vacio svg { width: 26px; height: 26px; }
+  .estado-vacio h3 {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    color: var(--verde-bosque);
+    margin-bottom: 0.4rem;
+  }
+  .estado-vacio p {
+    color: var(--piedra);
+    font-size: 0.88rem;
+    max-width: 340px;
+    margin: 0 auto 1.4rem;
+    line-height: 1.5;
+  }
+</style>
+
+<div id="view-convocatorias" class="view-pane active">
+  <div class="vista-encabezado">
+    <div>
+      <h1>Convocatorias</h1>
+      <div class="subtitulo">Programas de registro ciudadano activos vía WhatsApp</div>
+    </div>
+    <!-- El botón llama a una sola función segura -->
+    <button class="btn-nueva-convocatoria" onclick="iniciarNuevaConvocatoria()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nueva Convocatoria
+    </button>
+  </div>
+
+  <div id="estado-carga" class="estado-carga-caja">
+    Conectando con la base de datos...
+  </div>
+
+  <!-- MODAL DE CONFIRMACIÓN DE BORRADO -->
+<div id="modal-confirmar-eliminar" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚠️</div>
+    <h3 style="color: var(--rojo); font-weight: 700;">Eliminar Convocatoria</h3>
+    <p>¿Estás seguro de que deseas eliminar esta convocatoria?<br><br>Esta acción borrará la fila de la base de datos principal y <strong>no se puede deshacer</strong>.</p>
+    
+    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem;">
+      <button class="modal-btn" style="background: var(--borde); color: var(--carbon);" onclick="cerrarModalEliminar()">
+        Cancelar
+      </button>
+      <button class="modal-btn" style="background: var(--rojo);" onclick="ejecutarBorradoFinal()">
+        Sí, eliminar
+      </button>
+    </div>
+  </div>
+</div>
+  
+  <div id="espacio-tabla" style="display: none;">
+    <?!= incluir('comp_Tabla'); ?>
+  </div>
+</div>
+
+<script>
+  function iniciarNuevaConvocatoria() {
+
+    window.modoEdicionActivo = false;
+    
+    try {
+      document.querySelectorAll('#wizard-contenedor input, #wizard-contenedor textarea').forEach(campo => {
+        campo.value = '';
+      });
+
+      if (typeof State !== 'undefined') {
+        State.nuevoDraft = { 
+          nombre: '', 
+          descripcion: '', 
+          fechaInicio: '', 
+          fechaFin: '', 
+          limiteRegistros: '', 
+          esquemaFormulario: { secciones: [] } 
+        };
+        State.pasoActualWizard = 1;
+      }
+
+      if (typeof Router !== 'undefined' && Router.cambiarPasoWizard) {
+        Router.cambiarPasoWizard(1);
+      }
+      
+      const btnSiguiente = document.getElementById('btn-wizard-siguiente');
+      if (btnSiguiente) btnSiguiente.style.display = 'inline-block';
+
+      // Desbloquear preguntas por si venía de una edición bloqueada
+      desbloquearBuilderPreguntas();
+
+    } catch (e) {
+      console.error("Error al limpiar, procediendo a abrir:", e);
+    } finally {
+      if (typeof Router !== 'undefined' && Router.abrirWizard) {
+        Router.abrirWizard();
+      }
+    }
+  }
+
+  function formatearFechaEspanol(fechaStr) {
+    if (!fechaStr) return '---';
+    const soloFecha = String(fechaStr).split('T')[0].trim();
+    const partes = soloFecha.split('-');
+    if (partes.length !== 3) return soloFecha;
+    const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    return `${partes[2]} ${meses[parseInt(partes[1],10)-1]} ${partes[0]}`;
+  }
+
+  async function cargarConvocatorias() {
+    const estadoCarga = document.getElementById('estado-carga');
+    const espacioTabla = document.getElementById('espacio-tabla');
+    if (!estadoCarga || !espacioTabla) return;
+
+    try {
+      const datos = await API.obtenerConvocatorias();
+      
+      // Guardar en memoria global para que "prepararEdicion" pueda encontrar la convocatoria
+      window.listaConvocatorias = datos || [];
+      
+      if (!datos || datos.length === 0) {
+        estadoCarga.className = 'estado-vacio';
+        estadoCarga.innerHTML = `
+          <div class="icono-vacio">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 3h8l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6M9 8h2"/>
+            </svg>
+          </div>
+          <h3>Aún no hay convocatorias</h3>
+          <p>Crea la primera convocatoria para empezar a recibir registros ciudadanos por WhatsApp.</p>
+          <button class="btn-nueva-convocatoria" onclick="iniciarNuevaConvocatoria()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Crear la primera convocatoria
+          </button>
+        `;
+        return;
+      }
+
+      const cuerpoTabla = document.getElementById('tabla-cuerpo');
+      cuerpoTabla.innerHTML = "";
+      
+      datos.forEach(c => {
+        const fInicio = c.fechaInicio || c.fechainicio || c['fecha inicio'] || c['fecha_inicio'];
+        const fFin = c.fechaFin || c.fechafin || c['fecha fin'] || c['fecha_fin'];
+        const limite = c.limiteRegistros || c.limiteregistros || c['limite registros'] || '---';
+
+        const tr = document.createElement('tr');
+        
+        const selectEstado = `
+          <select class="select-estado" onchange="cambiarEstadoBD('${c.id}', this.value)">
+            <option value="ACTIVA" ${c.estado === 'ACTIVA' ? 'selected' : ''}>🟢 ACTIVA</option>
+            <option value="PAUSADA" ${c.estado === 'PAUSADA' ? 'selected' : ''}>🟡 PAUSADA</option>
+            <option value="CERRADA" ${c.estado === 'CERRADA' ? 'selected' : ''}>🔴 CERRADA</option>
+          </select>
+        `;
+
+        // 1. SEPARAMOS EN DOS BOTONES (Editar y Borrar)
+        tr.innerHTML = `
+          <td><strong>${c.nombre || 'Sin nombre'}</strong></td>
+          <td>${c.descripcion || 'Sin descripción'}</td>
+          <td>
+            <div class="fecha-rango">
+              <span>${formatearFechaEspanol(fInicio)}</span>
+              <span class="fecha-separador">→</span>
+              <span>${formatearFechaEspanol(fFin)}</span>
+            </div>
+          </td>
+          <td>${limite}</td>
+          <td>${selectEstado}</td>
+          <td>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-start;">
+              <button onclick="prepararEdicion('${c.id}')" style="background:#f8fafc; border:1px solid #cbd5e1; padding:0.4rem 0.75rem; border-radius:6px; cursor:pointer; color:#0f172a; font-size:0.8rem; font-weight:600;">
+                ✏️ Editar
+              </button>
+              <button onclick="confirmarEliminar('${c.id}')" style="background:#fef2f2; border:1px solid #fecaca; padding:0.4rem 0.75rem; border-radius:6px; cursor:pointer; color:#dc2626; font-size:0.8rem; font-weight:600;">
+                🗑️ Borrar
+              </button>
+            </div>
+          </td>
+        `;
+        cuerpoTabla.appendChild(tr);
+      });
+      
+      estadoCarga.style.display = "none";
+      espacioTabla.style.display = "block";
+
+    } catch (error) {
+      console.error(error);
+      estadoCarga.innerText = "🚨 Error crítico: " + error.message;
+      estadoCarga.style.color = "#C0392B";
+    }
+  }
+
+  // Variable global temporal para saber cuál convocatoria vamos a borrar
+  let convocatoriaABorrarId = null;
+
+  // 1. Abre el modal visual y guarda el ID
+  function confirmarEliminar(convId) {
+    convocatoriaABorrarId = convId;
+    document.getElementById('modal-confirmar-eliminar').style.display = 'flex';
+  }
+
+  // 2. Cierra el modal sin hacer nada
+  function cerrarModalEliminar() {
+    convocatoriaABorrarId = null;
+    document.getElementById('modal-confirmar-eliminar').style.display = 'none';
+  }
+
+  // 3. Se ejecuta cuando el usuario le da clic al botón rojo de "Sí, eliminar"
+  function ejecutarBorradoFinal() {
+    if (!convocatoriaABorrarId) return;
+    
+    const id = convocatoriaABorrarId;
+    cerrarModalEliminar(); // Cerramos la ventana de inmediato
+    
+    mostrarToast("Eliminando...", "info");
+    
+    google.script.run
+      .withSuccessHandler(res => {
+        if (res.ok) {
+          mostrarToast("Convocatoria eliminada correctamente", "ok");
+          cargarConvocatorias(); // Recarga la tabla para desaparecerla
+        } else {
+          mostrarToast("Error al eliminar: " + res.error, "error");
+        }
+      })
+      .withFailureHandler(err => {
+        mostrarToast("Error de conexión al eliminar", "error");
+      })
+      .apiEliminarConvocatoria(id);
+  }
+
+  function mostrarToast(msg, tipo) {
+    const colores = { ok: '#14884A', error: '#C0392B', info: '#0B7684' };
+    const t = document.createElement('div');
+    t.style.cssText = `
+      position:fixed; bottom:24px; right:24px; z-index:9999;
+      background:${colores[tipo] || colores.ok}; color:#fff;
+      padding:12px 20px; border-radius:10px; font-size:13px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight:600; box-shadow:0 10px 25px -8px rgba(11,74,60,0.45);
+    `;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+
+  function cambiarEstadoBD(convId, nuevoEstado) {
+    google.script.run
+      .withSuccessHandler(res => {
+        if (res.ok) {
+          mostrarToast('Estado actualizado a ' + nuevoEstado, 'ok');
+        } else {
+          mostrarToast('Error: ' + res.error, 'error');
+        }
+      })
+      .withFailureHandler(() => {
+        mostrarToast('Error de conexión con el servidor', 'error');
+      })
+      .apiCambiarEstadoConvocatoria(convId, nuevoEstado);
+  }
+
+  function prepararEdicion(convId) {
+    if (!window.listaConvocatorias) return alert("Cargando lista, intenta de nuevo.");
+    const conv = window.listaConvocatorias.find(c => c.id === convId);
+    if (!conv) return alert("Convocatoria no encontrada.");
+
+    mostrarToast("Cargando datos...", "info");
+    window.modoEdicionActivo = true;
+
+    const pFolio = conv.prefijoFolio || conv.prefijofolio || conv['prefijo folio'] || 'SMA';
+    const fInicio = conv.fechaInicio || conv.fechainicio || conv['fecha inicio'] || conv['fecha_inicio'] || '';
+    const fFin = conv.fechaFin || conv.fechafin || conv['fecha fin'] || conv['fecha_fin'] || '';
+    const mBienvenida = conv.mensajeBienvenida || conv.mensajebienvenida || conv['mensaje bienvenida'] || '';
+    const mExito = conv.mensajeExito || conv.mensajeexito || conv['mensaje exito'] || '';
+    const esquemaData = conv.esquemaFormulario || conv.esquemaformulario || conv['esquema formulario'] || conv.esquema_formulario || '{"secciones":[]}';
+
+    // BLINDAJE EXTREMO: Si el JSON de la base de datos está roto, lo reinicia sin trabar la app
+    let esquemaLimpio = { secciones: [] };
+    try {
+      if (typeof esquemaData === 'string') {
+        esquemaLimpio = JSON.parse(esquemaData);
+      } else if (typeof esquemaData === 'object') {
+        esquemaLimpio = esquemaData;
+      }
+    } catch(e) {
+      console.warn("Esquema corrupto o ausente, iniciando en blanco.");
+    }
+
+    google.script.run
+      .withSuccessHandler(res => {
+        if (typeof Router !== 'undefined' && Router.abrirWizard) {
+          Router.abrirWizard();
+        }
+
+        State.nuevoDraft = {
+          id: conv.id,
+          nombre: conv.nombre || conv.Nombre || '',
+          descripcion: conv.descripcion || conv.Descripcion || '',
+          prefijoFolio: pFolio,
+          fechaInicio: fInicio,
+          fechaFin: fFin,
+          limiteRegistros: conv.limiteRegistros || conv.limiteregistros || conv['limite registros'] || '',
+          mensajes: { bienvenida: mBienvenida, exito: mExito },
+          esquemaFormulario: esquemaLimpio
+        };
+
+        setTimeout(() => {
+          if (typeof inicializarPaso1 === 'function') inicializarPaso1();
+          if (typeof inicializarPaso2 === 'function') inicializarPaso2();
+
+          if (res.bloqueado) {
+            mostrarToast("Convocatoria con registros: preguntas bloqueadas.", "info");
+            bloquearBuilderPreguntas();
+          } else {
+            desbloquearBuilderPreguntas();
+          }
+        }, 200); 
+      })
+      .withFailureHandler((err) => alert("Error del servidor: " + err.message))
+      .apiVerificarEdicion(convId);
+  }
+
+
+  function bloquearBuilderPreguntas() {
+    const contenedor = document.getElementById('contenedor-builder-preguntas') || document.getElementById('wizard-paso-2');
+    if (contenedor) {
+      contenedor.style.pointerEvents = 'none';
+      contenedor.style.opacity = '0.5';
+    }
+  }
+
+  function desbloquearBuilderPreguntas() {
+    const contenedor = document.getElementById('contenedor-builder-preguntas') || document.getElementById('wizard-paso-2');
+    if (contenedor) {
+      contenedor.style.pointerEvents = 'auto';
+      contenedor.style.opacity = '1';
+    }
+  }
+</script>

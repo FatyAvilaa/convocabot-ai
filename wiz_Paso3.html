@@ -1,0 +1,156 @@
+<div id="wizard-paso-3" class="wizard-step-pane" style="display:none;">
+  <div style="max-width:600px; margin:0 auto; padding:1rem;">
+
+    <h3 style="font-size:1rem; font-weight:700; color:#1e293b; margin-bottom:0.25rem;">
+      Almacenamiento
+    </h3>
+    <p style="font-size:0.8rem; color:#64748b; margin-bottom:1.25rem;">
+      Al finalizar, el sistema creará esto automáticamente. No necesitas configurar nada.
+    </p>
+
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; margin-bottom:1rem;">
+      <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#64748b; margin-bottom:0.75rem; letter-spacing:0.05em;">
+        📁 Carpetas en Google Drive
+      </div>
+      <div style="font-size:0.8rem; color:#475569; margin-bottom:0.5rem;">
+        📂 <strong id="p3-nombre-raiz"></strong> (carpeta raíz)
+      </div>
+      <div id="p3-lista-carpetas" style="padding-left:1.25rem;"></div>
+      <div id="p3-sin-archivos" style="font-size:0.75rem; color:#94a3b8; font-style:italic; display:none;">
+        No hay preguntas de archivo. Solo se creará la carpeta raíz.
+      </div>
+    </div>
+
+    <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:1rem; margin-bottom:1rem;">
+      <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#166534; margin-bottom:0.75rem; letter-spacing:0.05em;">
+        📊 Hoja de respuestas en Google Sheets
+      </div>
+      <div style="font-size:0.8rem; color:#374151; margin-bottom:0.5rem;">
+        Columnas que se generarán:
+      </div>
+      <div id="p3-columnas" style="display:flex; flex-wrap:wrap; gap:0.35rem;"></div>
+    </div>
+
+    <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:0.75rem; font-size:0.8rem; color:#1e40af;">
+      <strong>Nombre de los archivos en Drive:</strong> Se identificarán por el CURP del ciudadano.<br>
+      Ejemplo: <code style="background:#dbeafe; padding:0.1rem 0.3rem; border-radius:3px;">HEGG560427_1.pdf</code>, <code style="background:#dbeafe; padding:0.1rem 0.3rem; border-radius:3px;">HEGG560427_2.jpg</code>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Función limpiadora replicada para el frontend
+function extraerPalabrasClaveUI(texto) {
+  if (!texto) return "";
+  let limpio = texto.toLowerCase().replace(/[^a-záéíóúñ\s]/g, ' ').trim();
+  const stopWords = /\b(escanea|escanear|adjunte|sube|subir|proporciona|ingresa|cual|es|tu|su|por|favor|documento|copia|fotografia|foto|archivo|el|la|los|las|de|del|para|y|o|en|con|un|una|unos|unas|imagen|pdf|formato|seccion|sección|flujo|opc|opcional)\b/gi;
+  
+  limpio = limpio.replace(stopWords, ' ').trim();
+  const palabras = limpio.split(/\s+/).filter(p => p.length > 2).slice(0, 3);
+  
+  if (palabras.length === 0) return "Archivo";
+  return palabras.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('_');
+}
+
+function inicializarPaso3() {
+  const draft = State.nuevoDraft;
+  const esquema = draft.esquemaFormulario;
+
+  // Nombre carpeta raíz
+  document.getElementById('p3-nombre-raiz').textContent =
+    'SMA_' + draft.nombre.replace(/[^a-zA-Z0-9 ]/g, '').trim();
+
+  const listaEl = document.getElementById('p3-lista-carpetas');
+  const sinArchivosEl = document.getElementById('p3-sin-archivos');
+  listaEl.innerHTML = '';
+  
+  let hayArchivos = false;
+  const carpetasPrevistas = new Set(); // Para no mostrar duplicados visuales
+
+  // Subcarpetas por preguntas de archivo
+  esquema.secciones.forEach(sec => {
+    const esPrincipal = sec.id === 'sec_principal';
+    
+    let sufijoRama = '';
+    if (!esPrincipal) {
+      const tituloLimpio = extraerPalabrasClaveUI(sec.titulo);
+      sufijoRama = tituloLimpio ? '_' + tituloLimpio : ('_' + sec.id.substring(0,6));
+    }
+
+    sec.preguntas.forEach(q => {
+      if (q.tipo === 'ARCHIVO') {
+        hayArchivos = true;
+        const cfg = q.configArchivo || {};
+        const formatos = [];
+        if (cfg.permitirPdf) formatos.push('PDF');
+        if (cfg.permitirImagenes) formatos.push('JPG/PNG');
+
+        const nombreBase = extraerPalabrasClaveUI(q.etiqueta);
+        const nombreCarpeta = nombreBase + sufijoRama;
+
+        // Evitar duplicados visuales si caen en la misma carpeta
+        if (!carpetasPrevistas.has(nombreCarpeta)) {
+          carpetasPrevistas.add(nombreCarpeta);
+          const item = document.createElement('div');
+          item.style.cssText = 'font-size:0.8rem; padding:0.35rem 0; border-bottom:1px solid #e2e8f0; color:#475569;';
+          item.innerHTML = `
+            📂 <strong>${nombreCarpeta}</strong>
+            <span style="color:#94a3b8; font-size:0.7rem; margin-left:0.5rem;">
+              ${formatos.join(', ')} · máx ${cfg.maxArchivos || 1} archivo(s) · ${cfg.pesoMaxMb || 5}MB
+            </span>
+          `;
+          listaEl.appendChild(item);
+
+          // Modificar texto si es modo edición
+        const esEdicion = window.modoEdicionActivo || (State.nuevoDraft && State.nuevoDraft.id);
+        const parrafoDesc = document.querySelector('#wizard-paso-3 p');
+        
+        if (esEdicion && parrafoDesc) {
+          parrafoDesc.innerText = "Esta es la estructura actual. No se crearán nuevas carpetas al guardar los cambios.";
+          parrafoDesc.style.color = "#b45309"; // Color advertencia sutil
+        } else if (parrafoDesc) {
+          parrafoDesc.innerText = "Al finalizar, el sistema creará esto automáticamente. No necesitas configurar nada.";
+          parrafoDesc.style.color = "#64748b"; 
+        }
+        }
+      }
+    });
+  });
+
+  if (!hayArchivos) {
+    sinArchivosEl.style.display = 'block';
+  } else {
+    sinArchivosEl.style.display = 'none';
+  }
+
+  // Columnas del Sheet
+  const columnas = ['Folio', 'Fecha de Registro', 'Canal', 'Estatus', 'Teléfono'];
+  esquema.secciones.forEach(sec => {
+    const esPrincipal = sec.id === 'sec_principal';
+    
+    let tagSec = '';
+    if (!esPrincipal) {
+      const tituloLimpio = extraerPalabrasClaveUI(sec.titulo);
+      tagSec = tituloLimpio ? ` (${tituloLimpio})` : '';
+    }
+
+    sec.preguntas.forEach(q => {
+      let tituloColumna = q.etiqueta.trim();
+      if (!esPrincipal) {
+        tituloColumna += tagSec;
+      }
+      if (q.tipo === 'ARCHIVO') {
+        tituloColumna += ' (Enlace Drive)';
+      }
+      columnas.push(tituloColumna);
+    });
+  });
+
+  const colEl = document.getElementById('p3-columnas');
+  // Se quitó la limitación de .substring para que se vean completos
+  colEl.innerHTML = columnas.map(c =>
+    `<span style="background:#dcfce7; color:#166534; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:600; display:inline-block; margin-bottom:0.2rem;">${c}</span>`
+  ).join('');
+}
+</script>

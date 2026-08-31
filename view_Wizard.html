@@ -1,0 +1,131 @@
+<div id="wizard-contenedor" class="wizard-overlay">
+  <header class="wizard-header">
+    <h2>Asistente de Creación de Convocatoria</h2>
+    <button onclick="intentarCerrarWizard()">&times;</button>
+  </header>
+
+  <div class="wizard-body">
+    <div class="pasos-indicador">
+      <div class="paso-burbuja active"></div>
+      <div class="paso-burbuja"></div>
+      <div class="paso-burbuja"></div>
+      <div class="paso-burbuja"></div>
+    </div>
+
+    <div id="wizard-pasos-render">
+      <?!= incluir('wiz_Paso1'); ?>
+      <?!= incluir('wiz_Paso2'); ?>
+      <?!= incluir('wiz_Paso3'); ?>
+      <?!= incluir('wiz_Paso4'); ?>
+    </div>
+  </div>
+
+  <footer class="wizard-footer">
+    <button id="btn-wizard-anterior" onclick="procesarPasoAnterior()">
+      ← Anterior
+    </button>
+    <!-- id="btn-wizard-siguiente" para poder ocultarlo -->
+    <button id="btn-wizard-siguiente" onclick="procesarPasoSiguiente()">
+      Siguiente →
+    </button>
+  </footer>
+</div>
+
+<script>
+  let convocatoriaGuardada = false;
+
+  window.resetearWizardCompleto = function() {
+      try {
+        // 1. Borrado bruto de todos los campos visuales
+        const campos = document.querySelectorAll('#wizard-contenedor input, #wizard-contenedor textarea');
+        campos.forEach(campo => {
+          campo.value = '';
+          campo.dispatchEvent(new Event('input')); 
+          campo.dispatchEvent(new Event('change'));
+        });
+
+        // 2. Reseteo absoluto de la memoria del sistema
+        if (typeof State !== 'undefined') {
+          State.nuevoDraft = {
+            nombre: '',
+            descripcion: '',
+            fechaInicio: '',
+            fechaFin: '',
+            limiteRegistros: '',
+            esquemaFormulario: { secciones: [] }
+          };
+          State.pasoActualWizard = 1;
+        }
+
+        // 3. Regresar al paso 1
+        if (typeof Router !== 'undefined' && typeof Router.cambiarPasoWizard === 'function') {
+          Router.cambiarPasoWizard(1);
+        }
+        
+        const btnSiguiente = document.getElementById('btn-wizard-siguiente');
+        if (btnSiguiente) btnSiguiente.style.display = 'inline-block';
+        
+      } catch (error) {
+        console.error("Error al limpiar el formulario: ", error);
+      }
+    };
+
+  function intentarCerrarWizard() {
+    if (convocatoriaGuardada === true) {
+      document.getElementById('wizard-contenedor').style.display = 'none';
+      if (typeof cargarConvocatorias === "function") cargarConvocatorias();
+      convocatoriaGuardada = false; 
+    } else {
+      if (typeof Router !== 'undefined' && Router.cerrarWizard) {
+        Router.cerrarWizard(); // Llama a tu advertencia sin interrumpirla
+      }
+    }
+  }
+
+  function procesarPasoAnterior() {
+    if (State.pasoActualWizard > 1) {
+      Router.cambiarPasoWizard(State.pasoActualWizard - 1);
+      document.getElementById('btn-wizard-siguiente').style.display = 'inline-block';
+    }
+  }
+
+  function procesarPasoSiguiente() {
+    const paso = State.pasoActualWizard;
+    const btnSiguiente = document.getElementById('btn-wizard-siguiente');
+
+    if (paso === 1) {
+      if (!validarYGuardarPaso1()) return;
+      Router.cambiarPasoWizard(2);
+      if (typeof inicializarPaso2 === 'function') inicializarPaso2();
+    } 
+    else if (paso === 2) {
+      // Usamos la bandera global que definimos
+      if (!window.modoEdicionActivo) {
+        const esquema = State.nuevoDraft.esquemaFormulario || { secciones: [] };
+        const secciones = esquema.secciones || [];
+        let conteoPreguntas = 0;
+        
+        secciones.forEach(sec => {
+          if (sec.preguntas) conteoPreguntas += sec.preguntas.length;
+        });
+
+        if (conteoPreguntas === 0) {
+          showModal(
+            "Sección sin preguntas", 
+            "Debes agregar al menos una pregunta a tu cuestionario antes de poder continuar al Paso 3."
+          );
+          return; // Detiene el flujo
+        }
+      }
+
+      // Si es modo edición (o si pasó la validación de nueva convocatoria), avanza al Paso 3
+      Router.cambiarPasoWizard(3);
+      if (typeof inicializarPaso3 === 'function') inicializarPaso3();
+    }
+    else if (paso === 3) { 
+      Router.cambiarPasoWizard(4);
+      if (typeof inicializarPaso4 === 'function') inicializarPaso4(); 
+      if (btnSiguiente) btnSiguiente.style.display = 'none';
+    }
+  }
+</script>

@@ -1,0 +1,170 @@
+<div id="wizard-paso-4" class="wizard-step-pane" style="display:none;">
+  <div style="max-width:520px; margin:0 auto; padding:1rem; text-align:center;">
+
+    <div id="p4-inicial">
+      <div style="font-size:2.5rem; margin-bottom:0.75rem;">🚀</div>
+      <h3 style="font-weight:700; margin-bottom:0.5rem;">Todo listo</h3>
+      <p style="font-size:0.85rem; color:#64748b; margin-bottom:1.5rem;">
+        Se crearán las carpetas en Drive, la hoja de respuestas en Sheets y la convocatoria quedará activa para el bot.
+      </p>
+      <button onclick="ejecutarDeploy()" style="background:#1e293b; color:#fff; border:none; padding:0.875rem 2rem; border-radius:8px; font-size:0.9rem; font-weight:700; cursor:pointer;">
+        ✅ Confirmar y activar
+      </button>
+    </div>
+
+    <div id="p4-cargando" style="display:none;">
+      <div style="font-size:2.5rem; margin-bottom:0.75rem;">⏳</div>
+      <p style="font-weight:600; color:#334155;">Creando infraestructura...</p>
+      <p style="font-size:0.75rem; color:#64748b; margin-top:0.5rem;">Puede tardar unos segundos.</p>
+    </div>
+
+    <div id="p4-exito" style="display:none;">
+      <div style="font-size:2.5rem; margin-bottom:0.75rem;">🎉</div>
+      <h3 style="font-weight:700; color:#166534; margin-bottom:0.5rem;">¡Convocatoria activada!</h3>
+      <p style="font-size:0.85rem; color:#64748b; margin-bottom:1.25rem;">El bot ya puede recibir registros.</p>
+      <div id="p4-links" style="text-align:left; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; font-size:0.8rem; margin-bottom:1.25rem;"></div>
+      <button onclick="intentarCerrarWizard()" style="background:#10b981; color:#fff; border:none; padding:0.75rem 1.5rem; border-radius:8px; font-weight:700; cursor:pointer;">
+        Ir al Dashboard
+      </button>
+    </div>
+
+    <div id="p4-error" style="display:none;">
+      <div style="font-size:2.5rem; margin-bottom:0.75rem;">❌</div>
+      <p style="font-weight:600; color:#dc2626;" id="p4-error-msg"></p>
+      <button onclick="mostrarP4Inicial()" style="margin-top:1rem; background:#f1f5f9; border:1px solid #e2e8f0; padding:0.5rem 1rem; border-radius:6px; cursor:pointer;">
+        Reintentar
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  async function ejecutarDeploy() {
+    const inicialDiv = document.getElementById('p4-inicial');
+    const cargandoDiv = document.getElementById('p4-cargando');
+    const exitoDiv = document.getElementById('p4-exito');
+    const errorDiv = document.getElementById('p4-error');
+    const errorMsg = document.getElementById('p4-error-msg');
+    const linksDiv = document.getElementById('p4-links');
+
+    inicialDiv.style.display = 'none';
+    cargandoDiv.style.display = 'block';
+    errorDiv.style.display = 'none';
+
+    try {
+      const esEdicion = window.modoEdicionActivo || (State.nuevoDraft && State.nuevoDraft.id);
+
+      if (esEdicion) {
+        document.querySelector('#p4-cargando p').innerText = "Guardando actualización...";
+        
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res.ok) {
+              cargandoDiv.style.display = 'none';
+              exitoDiv.style.display = 'block';
+              convocatoriaGuardada = true; 
+              
+              const btnAnterior = document.getElementById('btn-wizard-anterior');
+              if (btnAnterior) btnAnterior.style.display = 'none';
+              
+              document.querySelector('#p4-exito h3').innerText = "¡Convocatoria actualizada!";
+              document.querySelector('#p4-exito p').innerText = "Los cambios han sido guardados exitosamente.";
+              linksDiv.style.display = 'none';
+            } else {
+              // Ya no usamos throw Error. Actualizamos el DOM directamente para no pasmar la app.
+              cargandoDiv.style.display = 'none';
+              errorDiv.style.display = 'block';
+              errorMsg.innerText = "Error: " + (res.error || "No se pudo actualizar.");
+            }
+          })
+          .withFailureHandler(function(err) {
+            cargandoDiv.style.display = 'none';
+            errorDiv.style.display = 'block';
+            errorMsg.innerText = "Error de servidor: " + err.message;
+          })
+          .apiActualizarConvocatoria(State.nuevoDraft.id, State.nuevoDraft);
+          
+      } else {
+        document.querySelector('#p4-cargando p').innerText = "Creando infraestructura...";
+        
+        const res = await API.guardarYDeployConvocatoria(State.nuevoDraft);
+        
+        if (res.ok) {
+          cargandoDiv.style.display = 'none';
+          exitoDiv.style.display = 'block';
+          convocatoriaGuardada = true; 
+          
+          const btnAnterior = document.getElementById('btn-wizard-anterior');
+          if (btnAnterior) btnAnterior.style.display = 'none';
+          
+          document.querySelector('#p4-exito h3').innerText = "¡Convocatoria activada!";
+          document.querySelector('#p4-exito p').innerText = "El bot ya puede recibir registros.";
+          
+          linksDiv.style.display = 'block';
+          linksDiv.innerHTML = `
+            <p style="margin-bottom:0.5rem;"><strong>📊 Base de datos de registros:</strong><br><a href="${res.sheetUrl}" target="_blank" style="color:#2563eb;">Abrir Google Sheets</a></p>
+            <p><strong>📁 Carpeta de expedientes:</strong><br><a href="${res.folderUrl}" target="_blank" style="color:#2563eb;">Abrir Google Drive</a></p>
+          `;
+        } else {
+          cargandoDiv.style.display = 'none';
+          errorDiv.style.display = 'block';
+          errorMsg.innerText = "Error al crear: " + res.error;
+        }
+      }
+    } catch (err) {
+      cargandoDiv.style.display = 'none';
+      errorDiv.style.display = 'block';
+      errorMsg.innerText = "Error general: " + err.message;
+    }
+  }
+
+  function inicializarPaso4() {
+    mostrarP4Inicial();
+    
+    // Cambiamos el texto del Paso 4 dependiendo de si es nueva o edición
+    const esEdicion = window.modoEdicionActivo || (State.nuevoDraft && State.nuevoDraft.id);
+    const tituloInicial = document.querySelector('#p4-inicial h3');
+    const descInicial = document.querySelector('#p4-inicial p');
+    const btnInicial = document.querySelector('#p4-inicial button');
+
+    if (esEdicion) {
+      tituloInicial.innerText = "Guardar cambios";
+      descInicial.innerText = "Se actualizarán los datos. Las carpetas y la hoja de cálculo existente se mantendrán intactas.";
+      btnInicial.innerHTML = "💾 Confirmar actualización";
+    } else {
+      tituloInicial.innerText = "Todo listo";
+      descInicial.innerText = "Se crearán las carpetas en Drive, la hoja de respuestas en Sheets y la convocatoria quedará activa para el bot.";
+      btnInicial.innerHTML = "✅ Confirmar y activar";
+    }
+  }
+
+  function mostrarP4Inicial() {
+    document.getElementById('p4-error').style.display = 'none';
+    document.getElementById('p4-cargando').style.display = 'none';
+    document.getElementById('p4-exito').style.display = 'none';
+    document.getElementById('p4-inicial').style.display = 'block';
+  }
+
+  function intentarCerrarWizard() {
+    if (convocatoriaGuardada === true) {
+      const contenedor = document.getElementById('wizard-contenedor');
+      if (contenedor) {
+        contenedor.classList.remove('active');
+        contenedor.style.removeProperty('display');
+      }
+      
+      if (typeof cargarConvocatorias === "function") cargarConvocatorias();
+      
+      if (typeof Router !== 'undefined' && Router.cambiarPasoWizard) {
+        Router.cambiarPasoWizard(1);
+      }
+      
+      convocatoriaGuardada = false; 
+    } else {
+      if (typeof Router !== 'undefined' && Router.cerrarWizard) {
+        Router.cerrarWizard();
+      }
+    }
+  }
+</script>

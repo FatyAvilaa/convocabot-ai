@@ -1,0 +1,125 @@
+<style>
+  .tabla-contenedor {
+    background: #fff;
+    border-radius: var(--radio-lg);
+    border: 1px solid var(--borde-suave);
+    overflow: hidden;
+    margin-top: 1rem;
+    box-shadow: var(--sombra-md);
+  }
+
+  .tabla-sistema {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  .tabla-sistema th {
+    background-color: var(--verde-tenue);
+    color: var(--verde-bosque);
+    padding: 0.9rem 1.1rem;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--verde-tenue-2);
+  }
+
+  .tabla-sistema td {
+    padding: 1rem 1.1rem;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--borde-suave);
+    vertical-align: middle;
+  }
+
+  .tabla-sistema tbody tr { transition: background-color 0.15s ease; }
+  .tabla-sistema tbody tr:hover { background-color: var(--verde-tenue); }
+  .tabla-sistema tr:last-child td { border-bottom: none; }
+
+  .tabla-sistema td strong { color: var(--verde-bosque); font-weight: 600; }
+
+  /* Badges de estado (por si se usan en otras vistas del sistema) */
+  .badge {
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--radio-pill);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .badge.activa    { background-color: var(--verde-tenue-2); color: var(--verde-hoja-oscuro); }
+  .badge.pausada   { background-color: var(--ambar-bg);      color: var(--ambar); }
+  .badge.finalizada{ background-color: var(--borde-suave);   color: var(--piedra); }
+
+  /* Selector de estado embebido en la tabla (generado por view_Convocatorias) */
+  .select-estado {
+    padding: 0.4rem 0.65rem;
+    border-radius: var(--radio-pill);
+    border: 1px solid var(--borde);
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: var(--font-stack);
+    color: var(--carbon);
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  .select-estado:hover { border-color: var(--verde-hoja); }
+  .select-estado:focus { outline: none; border-color: var(--verde-hoja); box-shadow: 0 0 0 3px var(--verde-tenue); }
+
+  /* Botones "Editar" y "Borrar" generados por view_Convocatorias */
+  .btn-administrar {
+    background: #fff;
+    border: 1px solid var(--borde);
+    padding: 0.45rem 0.9rem;
+    border-radius: var(--radio-md);
+    cursor: pointer;
+    color: var(--verde-bosque);
+    font-family: var(--font-stack);
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+  }
+  .btn-administrar:hover {
+    border-color: var(--verde-hoja);
+    background: var(--verde-tenue);
+    color: var(--verde-hoja-oscuro);
+  }
+
+  .celda-acciones { display: flex; gap: 0.5rem; }
+
+  .btn-borrar {
+    background: #fff;
+    border: 1px solid var(--borde);
+    padding: 0.45rem 0.6rem;
+    border-radius: var(--radio-md);
+    cursor: pointer;
+    color: var(--rojo);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .btn-borrar:hover {
+    border-color: var(--rojo);
+    background: var(--rojo-bg);
+  }
+  .btn-borrar svg { width: 15px; height: 15px; }
+</style>
+
+<div class="tabla-contenedor">
+  <table class="tabla-sistema" id="tabla-convocatorias">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Descripción</th>
+        <th>Vigencia</th>
+        <th>Límite de registros</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tabla-cuerpo">
+      </tbody>
+  </table>
+</div>

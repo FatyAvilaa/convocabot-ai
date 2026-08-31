@@ -1,0 +1,43 @@
+<script>
+  // Gestor del estado en memoria del navegador
+  const State = {
+    pasoActualWizard: 1,
+    nuevoDraft: null,
+    convocatoriaActiva: null,
+    
+    guardarConvocatoriaActiva: (datos) => { 
+      State.convocatoriaActiva = datos; 
+    },
+    obtenerConvocatoriaActiva: () => { 
+      return State.convocatoriaActiva; 
+    },
+    
+    inicializarNuevoDraft: () => {
+      State.pasoActualWizard = 1;
+      State.nuevoDraft = {
+        nombre: "",
+        descripcion: "",
+        fechaInicio: "",
+        fechaFin: "",
+        limiteRegistros: 0,
+        mensajes: { 
+          bienvenida: "", 
+          exito: "" 
+        },
+        sheetId: "",
+        estado: "ACTIVA",
+        // Nueva estructura basada en bloques de secciones opcionales
+        esquemaFormulario: {
+          secciones: [
+            { 
+              id: "sec_principal", 
+              titulo: "Cuestionario Principal", 
+              colorClass: "sec-color-0", 
+              preguntas: [] 
+            }
+          ]
+        }
+      };
+    }
+  };
+</script>

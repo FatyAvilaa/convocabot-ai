@@ -1,0 +1,144 @@
+<style>
+  /* ── Mascota animada de la barra lateral ─────────────────────── */
+  .sidebar-mascota-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    min-height: 170px;
+  }
+
+  .mascota-brote {
+    width: 190px;
+    height: 190px;
+    position: relative;
+    animation: brotarBob 3.2s ease-in-out infinite;
+  }
+
+  .mascota-brote .halo {
+    animation: brotarHalo 3.2s ease-in-out infinite;
+    transform-origin: 50% 62%;
+  }
+
+  .mascota-brote .cuerpo {
+    animation: brotarSway 4.4s ease-in-out infinite;
+    transform-origin: 50% 78%;
+  }
+
+  .mascota-brote .ojos {
+    animation: brotarParpadeo 4.6s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  @keyframes brotarBob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-5px); }
+  }
+  @keyframes brotarSway {
+    0%, 100% { transform: rotate(-3deg); }
+    50%      { transform: rotate(3deg); }
+  }
+  @keyframes brotarHalo {
+    0%, 100% { opacity: 0.35; transform: scale(0.94); }
+    50%      { opacity: 0.6;  transform: scale(1.04); }
+  }
+  @keyframes brotarParpadeo {
+    0%, 90%, 100% { transform: scaleY(1); }
+    95%           { transform: scaleY(0.12); }
+  }
+
+  .mascota-caption {
+    font-size: 0.75rem;
+    color: var(--sidebar-text);
+    text-align: center;
+    line-height: 1.4;
+    opacity: 0.85;
+  }
+  .mascota-caption strong { color: #fff; font-weight: 600; }
+
+  .mascota-punto-activo {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 999px;
+    background: var(--verde-hoja);
+    margin-right: 0.35rem;
+    box-shadow: 0 0 0 0 rgba(31,174,94,0.6);
+    animation: pulsoActivo 2.2s ease-out infinite;
+  }
+  @keyframes pulsoActivo {
+    0%   { box-shadow: 0 0 0 0 rgba(31,174,94,0.55); }
+    70%  { box-shadow: 0 0 0 6px rgba(31,174,94,0); }
+    100% { box-shadow: 0 0 0 0 rgba(31,174,94,0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mascota-brote, .mascota-brote .halo, .mascota-brote .cuerpo,
+    .mascota-brote .ojos, .mascota-punto-activo { animation: none; }
+  }
+</style>
+
+<aside class="sidebar">
+  <div class="brand">
+    <span class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20c8-1 14-7 15-15-8 1-14 7-15 15z"/>
+        <path d="M6.5 17.5 15 9"/>
+      </svg>
+    </span>
+    <span>
+      SMA Tlaxcala
+      <span class="brand-sub">Cambio Climático</span>
+    </span>
+  </div>
+
+  <nav>
+    <a class="menu-item active" data-target="view-convocatorias">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 3h8l4 4v14H7z"/>
+        <path d="M14 3v4h4"/>
+        <path d="M9 12h6M9 16h6M9 8h2"/>
+      </svg>
+      Convocatorias
+    </a>
+    <a class="menu-item" data-target="view-analitica">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20V10M10 20V4M16 20v-6"/>
+        <path d="M19.5 3.2l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z"/>
+      </svg>
+      Analítica IA
+    </a>
+  </nav>
+
+  <div class="sidebar-mascota-wrap">
+    <svg class="mascota-brote" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse class="halo" cx="50" cy="66" rx="26" ry="8" fill="#1FAE5E"/>
+      <g class="cuerpo">
+        <path d="M50 30c-14 0-16 14-9 24 3.5 5 9 7 9 7s5.5-2 9-7c7-10 5-24-9-24z" fill="url(#gradHoja)"/>
+        <path d="M50 34v27" stroke="#0E5C4A" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/>
+        <path d="M37 26c2-6 8-9 13-8-1 5-6 9-13 8z" fill="#1FAE5E"/>
+        <path d="M63 26c-2-6-8-9-13-8 1 5 6 9 13 8z" fill="#14884A"/>
+        <g class="ojos">
+          <circle cx="45.5" cy="49" r="2.1" fill="#0B4A3C"/>
+          <circle cx="54.5" cy="49" r="2.1" fill="#0B4A3C"/>
+        </g>
+        <path d="M46 55q4 3 8 0" stroke="#0B4A3C" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      </g>
+      <defs>
+        <linearGradient id="gradHoja" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3CC57C"/>
+          <stop offset="100%" stop-color="#14884A"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <div class="mascota-caption">
+      <span class="mascota-punto-activo"></span><strong>Brote</strong> tu asistente<br>siempre despierto en WhatsApp
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    Secretaría de Medio Ambiente<br>
+    Registro ciudadano vía WhatsApp
+  </div>
+</aside>

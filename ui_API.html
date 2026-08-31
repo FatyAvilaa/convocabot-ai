@@ -1,0 +1,71 @@
+<script>
+  // Capa de aislamiento para google.script.run
+  const API = {
+    
+    obtenerConvocatorias: () => {
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .apiObtenerConvocatorias();
+      });
+    },
+
+    analizarFormulario: (urlForm) => {
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .apiAnalizarFormulario(urlForm);
+      });
+    },
+
+    guardarYDeployConvocatoria: (draft) => {
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resultado => {
+            if (!resultado.ok) { reject(resultado); return; }
+            google.script.run
+              .withSuccessHandler(resolve)
+              .withFailureHandler(reject)
+              .apiDeployConvocatoria(
+                resultado.id,
+                draft.nombre,
+                JSON.stringify(draft.esquemaFormulario)
+              );
+          })
+          .withFailureHandler(reject)
+          .apiGuardarConvocatoria(draft);
+      });
+    },
+
+    obtenerConvocatoriaActiva: () => {
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .apiObtenerConvocatoriaActiva();
+      });
+    },
+
+    // --- MÓDULO ANALÍTICA E IA ---
+    ejecutarConsultaAnalitica: (idConvocatoria, pregunta) => {
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .apiEjecutarConsultaAnalitica(idConvocatoria, pregunta);
+      });
+    },
+
+    obtenerHistorialIA: (idConvocatoria) => {
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .apiObtenerHistorialIA(idConvocatoria);
+      });
+    }
+
+  };
+</script>

@@ -1,0 +1,97 @@
+<script>
+  const Router = {
+    
+    irA: (viewId) => {
+      document.querySelectorAll('.view-pane').forEach(v => v.classList.remove('active'));
+      const target = document.getElementById(viewId);
+      if (target) target.classList.add('active');
+    },
+
+    abrirWizard: () => {
+      // 1. Reiniciar borrador de datos
+      State.inicializarNuevoDraft();
+
+      // 2. Resetear pantallas internas del paso 4 e inputs del paso 1
+      if (typeof mostrarP4Inicial === 'function') mostrarP4Inicial();
+      if (typeof inicializarPaso1 === 'function') inicializarPaso1();
+
+      // 3. Remover estilos inline y activar clase modal
+      const contenedor = document.getElementById('wizard-contenedor');
+      if (contenedor) {
+        contenedor.style.removeProperty('display');
+        contenedor.classList.add('active');
+      }
+
+      // 4. Posicionar en el Paso 1
+      Router.cambiarPasoWizard(1);
+    },
+
+    cerrarWizard: () => {
+      showModal("¿Salir del asistente?", "Perderás todos los cambios realizados.", "Router.finalizarCierre()");
+    },
+    
+    finalizarCierre: () => {
+      const contenedor = document.getElementById('wizard-contenedor');
+      if (contenedor) {
+        contenedor.classList.remove('active');
+        contenedor.style.removeProperty('display');
+      }
+    },
+
+    cambiarPasoWizard: (paso) => {
+      State.pasoActualWizard = paso;
+      
+      document.querySelectorAll('.paso-burbuja').forEach((b, idx) => {
+        if(idx < paso) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+
+      document.querySelectorAll('.wizard-step-pane').forEach(p => p.style.display = 'none');
+      
+      const pasoObjetivo = document.getElementById(`wizard-paso-${paso}`);
+      if(pasoObjetivo) pasoObjetivo.style.display = 'block';
+
+      const btnAnterior = document.getElementById('btn-wizard-anterior');
+      const btnSiguiente = document.getElementById('btn-wizard-siguiente');
+
+      btnAnterior.style.visibility = (paso === 1) ? 'hidden' : 'visible';
+      btnAnterior.style.display = 'inline-block';
+
+      if (paso === 4) {
+        btnSiguiente.style.display = 'none';
+      } else {
+        btnSiguiente.style.display = 'inline-block';
+        btnSiguiente.innerText = 'Siguiente';
+      }
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const menuItems = document.querySelectorAll('nav .menu-item');
+    
+    menuItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault(); // Evita recargas o saltos por ser etiqueta <a>
+
+        const menuItem = e.target.closest('.menu-item');
+        if (!menuItem) return;
+
+        const targetViewId = menuItem.getAttribute('data-target');
+        if (!targetViewId) return;
+
+        menuItems.forEach(i => i.classList.remove('active'));
+        menuItem.classList.add('active');
+
+        Router.irA(targetViewId);
+
+        if (targetViewId === 'view-analitica' && typeof inicializarVistaAnalitica === 'function') {
+          inicializarVistaAnalitica();
+        }
+      });
+    });
+
+    if (typeof cargarConvocatorias === 'function') {
+      cargarConvocatorias();
+    }
+  });
+</script>

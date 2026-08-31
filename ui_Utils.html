@@ -1,0 +1,17 @@
+<script>
+  function showModal(title, msg, onConfirm) {
+    const modal = document.getElementById('custom-modal');
+    document.getElementById('modal-title').innerText = title;
+    document.getElementById('modal-msg').innerText = msg;
+    const actions = document.getElementById('modal-actions');
+    actions.innerHTML = onConfirm 
+      ? `<button class="modal-btn" style="background:#e2e8f0;" onclick="closeModal()">Cancelar</button>
+         <button class="modal-btn" style="background:#ef4444; color:#fff;" onclick="${onConfirm}; closeModal();">Confirmar</button>`
+      : `<button class="modal-btn" style="background:#1e293b; color:#fff;" onclick="closeModal()">Aceptar</button>`;
+    modal.style.display = 'flex';
+  }
+
+  function closeModal() { 
+    document.getElementById('custom-modal').style.display = 'none'; 
+  }
+</script>
