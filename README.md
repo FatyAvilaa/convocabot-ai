@@ -1,4 +1,4 @@
-# ConvocaBot AI 🌿
+<img width="2862" height="1531" alt="image" src="https://github.com/user-attachments/assets/c1520aeb-4413-4d4c-ba15-6e36a2298300" /># ConvocaBot AI 🌿
 
 **Sistema de registro ciudadano con WhatsApp, inteligencia artificial y panel administrativo web — desarrollado para la Secretaría de Medio Ambiente del Estado de Tlaxcala.**
 
@@ -109,34 +109,7 @@ CacheService (`MemoryCache`) es de acceso inmediato (< 50ms) y evita que el bot 
 **¿Por qué LockService para los folios?**
 `LockService.getScriptLock()` serializa las escrituras concurrentes. Sin él, dos registros simultáneos podrían obtener el mismo número de folio. El lock garantiza unicidad incluso en picos de demanda.
 
----
 
-## Estructura del proyecto
-
-```
-/
-├── main.gs                  — doGet, doPost, funciones del servidor
-├── gs_Bot.gs                — motor de conversación y validaciones
-├── gs_Webhook.gs            — recepción de webhooks Meta, descarga de media
-├── gs_Sesiones.gs           — gestión de sesiones (caché + Sheets)
-├── gs_Enviar.gs             — envío de mensajes, botones y listas a WhatsApp
-├── gs_Municipios.gs         — catálogo de 60 municipios de Tlaxcala
-├── ui_Index.html            — shell de la SPA, carga de componentes
-├── ui_Styles.html           — CSS global (paleta verde institucional)
-├── ui_State.html            — estado en memoria del wizard
-├── ui_API.html              — capa de comunicación con el servidor
-├── ui_Router.html           — navegación entre vistas
-├── ui_Utils.html            — modal, toast, helpers
-├── view_Convocatorias.html  — listado y control de convocatorias
-├── view_Wizard.html         — contenedor del wizard de 4 pasos
-├── wiz_Paso1.html           — metadatos de la convocatoria
-├── wiz_Paso2.html           — constructor visual de preguntas
-├── wiz_Paso3.html           — preview de infraestructura
-├── wiz_Paso4.html           — deploy y activación
-└── comp_Sidebar.html        — menú lateral de navegación
-```
-
----
 
 ## Variables de entorno (Propiedades del script)
 
@@ -153,7 +126,7 @@ SPREADSHEET_ID  — ID del Spreadsheet central (base de datos)
 ## Capturas
 
 > *Panel de convocatorias con control de estado*
-![Captura de pantalla](img/captura-2026-08-30.png)
+![Captura de pantalla](img/img1.png)
 
 > *Wizard — Paso 2: constructor visual de preguntas*
 
@@ -161,9 +134,21 @@ SPREADSHEET_ID  — ID del Spreadsheet central (base de datos)
 
 > *Conversación real en WhatsApp con botones interactivos*
 
+![Captura de pantalla](img/img7.png)
+
+
 > *Sheet de respuestas generado automáticamente con formato institucional*
 
----
+![Captura de pantalla](img/image.png)
+
+
+
+> *Reportes automáticos e inteligentes con Inteligencia Arificial*
+![Captura de pantalla](img/img4.png)
+
+
+
+
 
 ## Contexto del proyecto
 
