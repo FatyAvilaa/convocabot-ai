@@ -1,8 +1,7 @@
 ![Captura de pantalla](img/img4.png)
 
 
-
-/># ConvocaBot AI 🌿
+# ConvocaBot AI 🌿
 
 **Sistema de registro ciudadano con WhatsApp, inteligencia artificial y panel administrativo web — desarrollado para la Secretaría de Medio Ambiente del Estado de Tlaxcala.**
 
