@@ -153,8 +153,11 @@ SPREADSHEET_ID  — ID del Spreadsheet central (base de datos)
 ## Capturas
 
 > *Panel de convocatorias con control de estado*
+![Captura de pantalla](img/captura-2026-08-30.png)
 
 > *Wizard — Paso 2: constructor visual de preguntas*
+
+![Captura de pantalla](img/img3.png)
 
 > *Conversación real en WhatsApp con botones interactivos*
 
