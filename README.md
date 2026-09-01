@@ -1,4 +1,8 @@
-<img width="2862" height="1531" alt="image" src="https://github.com/user-attachments/assets/c1520aeb-4413-4d4c-ba15-6e36a2298300" /># ConvocaBot AI 🌿
+![Captura de pantalla](img/img4.png)
+
+
+
+/># ConvocaBot AI 🌿
 
 **Sistema de registro ciudadano con WhatsApp, inteligencia artificial y panel administrativo web — desarrollado para la Secretaría de Medio Ambiente del Estado de Tlaxcala.**
 
@@ -144,7 +148,7 @@ SPREADSHEET_ID  — ID del Spreadsheet central (base de datos)
 
 
 > *Reportes automáticos e inteligentes con Inteligencia Arificial*
-![Captura de pantalla](img/img4.png)
+![Captura de pantalla](img/img2.png)
 
 
 
